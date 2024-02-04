@@ -416,7 +416,7 @@ value. Sometimes it's best to simply [use `!`][] on the field.
 [private]: /effective-dart/design#prefer-making-declarations-private
 [final]: /effective-dart/design#prefer-making-fields-and-top-level-variables-final
 [`final`]: /effective-dart/usage#do-follow-a-consistent-rule-for-var-and-final-on-local-variables
-[use `!`]: /null-safety/understanding-null-safety#null-assertion-operator
+[use `!`]: /null-safety/understanding-null-safety#non-null-assertion-operator
 
 ## Strings
 
@@ -944,26 +944,6 @@ var strings = charCodes.map((code) => String.fromCharCode(code));
 
 // Unnamed constructor:
 var buffers = charCodes.map((code) => StringBuffer(code));
-```
-
-
-### DO use `=` to separate a named parameter from its default value
-
-{% include linter-rule-mention.md rule="prefer_equal_for_default_values" %}
-
-Before Dart 3, Dart allowed both `:` and `=` 
-as the default value separator for named parameters. 
-For consistency with optional positional parameters, use `=`.
-
-{:.good}
-<?code-excerpt "usage_good.dart (default-separator)"?>
-```dart
-void insert(Object item, {int at = 0}) { ... }
-```
-
-{:.bad}
-```dart
-void insert(Object item, {int at: 0}) { ... }
 ```
 
 

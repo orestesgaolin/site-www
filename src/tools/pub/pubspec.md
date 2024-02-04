@@ -94,6 +94,10 @@ A pubspec can have the following fields:
 : Optional. List of topics for the package.
   [_Learn more._](#topics)
 
+`ignored_advisories`
+: Optional. List of ignored security advisories.
+  [_Learn more._](#ignored_advisories)
+
 Pub ignores all other fields.
 
 {{site.alert.flutter-note}}
@@ -445,6 +449,28 @@ Pub.dev requires topics to follow these specifications:
 When choosing topics, consider if [existing topics]({{site.pub}}/topics)
 are relevant. Tagging with existing topics helps users discover your package.
 
+### Ignored_advisories
+
+If a package has a dependency that is affected by a security advisory,
+pub warns about the advisory during dependency resolution.
+Package authors can use the `ignored_advisories` field as an allowlist
+of triggered advisories that are not relevant for the package.
+
+To suppress the warning about an advisory,
+add the advisory identifier to the `ignored_advisories` list.
+For example:
+
+```yaml
+name: myapp
+dependencies:
+  foo: ^1.0.0
+ignored_advisories:
+ - GHSA-4rgh-jx4f-qfcq
+```
+
+For more information, check out
+[Security advisories](/tools/pub/security-advisories).
+
 ### SDK constraints
 
 A package can indicate which versions of its dependencies it supports, but
@@ -514,8 +540,15 @@ environment:
 
 A Flutter SDK constraint is satisfied only if pub is running in the
 context of the `flutter` executable, and the Flutter SDK's
-`version` file matches the given version constraint. Otherwise,
-the package will not be selected.
+`version` file meets the version constraint's lower bound. Otherwise,
+the package won't be selected.
+
+{{site.alert.note}}
+  Note: The Flutter SDK only enforces the lower bound of the flutter constraint.
+  To learn more, check out
+  [issue #95472](https://github.com/flutter/flutter/issues/95472)
+  in the `flutter/flutter` repository.
+{{site.alert.end}}
 
 To publish a package with a Flutter SDK constraint,
 you must specify a Dart SDK constraint with a minimum version of
