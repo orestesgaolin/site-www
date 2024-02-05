@@ -5,7 +5,8 @@ version: 0.0.1
 environment:
   sdk: ^3.2.0
 
+dependencies:
+  mockito: ^5.4.4
+
 dev_dependencies:
   lints: ^3.0.0
-dependencies:
-  mockito: ^5.4.3

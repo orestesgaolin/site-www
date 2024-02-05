@@ -1,16 +1,23 @@
 ---
 title: Fixing type promotion failures
-description: Solutions for cases where you know more about a field's type than Dart can determine.
+description: >-
+  Solutions for cases where you know more about a field's type than Dart can determine.
 ---
 
-[Type promotion][] occurs when flow analysis can soundly confirm the value of 
-a [nullable type][] is *not null*, and that its value will not change from that point on.
-Many circumstances can weaken a type's soundness, causing type promotion to fail.
+[Type promotion][] occurs when flow analysis can soundly confirm
+a variable with a [nullable type][] is *not null*, and
+that it will not change from that point on.
+Many circumstances can weaken a type's soundness,
+causing type promotion to fail.
 
 This page lists reasons why type promotion failures occur,
 with tips on how to fix them.
-To learn more, check out the [Understanding null safety][] page.
+To learn more about flow analysis and type promotion,
+check out the [Understanding null safety][] page.
 
+[Type promotion]: /null-safety/understanding-null-safety#type-promotion-on-null-checks
+[nullable type]: /null-safety/understanding-null-safety#non-nullable-and-nullable-types
+[Understanding null safety]: /null-safety/understanding-null-safety
 
 ## Unsupported language version for field promotion {#language-version}
 
@@ -24,7 +31,7 @@ This can happen either because:
 
 * Your [`pubspec.yaml`][] declares an SDK constraint with a
   lower bound below 3.2, or 
-* You have a `//@dart=version` comment at the top of the file,
+* You have a `// @dart=version` comment at the top of the file,
   where `version` is lower than 3.2.
 
 **Example:**
@@ -48,8 +55,7 @@ class C {
 **Message:**
 
 ```nocode
-'_i' refers to a field. It couldn’t be promoted
-because field promotion is only available in Dart 3.2 and above.
+'_i' refers to a field. It couldn't be promoted because field promotion is only available in Dart 3.2 and above.
 ```
 
 **Solution:**
@@ -58,6 +64,7 @@ Ensure your library isn't using a [language version][] earlier than 3.2.
 Check the top of your file for an outdated `//@dart=version` comment,
 or your `pubspec.yaml` for an outdated [SDK constraint lower-bound][].
 
+[`pubspec.yaml`]: /tools/pub/pubspec
 [SDK constraint lower-bound]: /tools/pub/pubspec#sdk-constraints
 
 ## Only local variables can be promoted (before Dart 3.2) {#property}
@@ -88,7 +95,7 @@ class C {
 
 **Solution:**
 
-If you are using Dart 3.1 or earlier, [upgrade to 3.2][upgrade].
+If you are using Dart 3.1 or earlier, [upgrade to 3.2](/get-dart).
 
 If you need to keep using an older version,
 read [Other causes and workarounds](#other-causes-and-workarounds)
@@ -193,7 +200,8 @@ extension Ext on int? {
 
 **Solution:**
 
-Create a local variable to hold the value of `this`, then perform the null check.
+Create a local variable to hold the value of `this`,
+then perform the null check.
 
 {:.good}
 <?code-excerpt "non_promotion/lib/non_promotion.dart (this)" replace="/final.*/[!$&!]/g"?>
@@ -206,12 +214,15 @@ extension Ext on int? {
 }
 ```
 
+[extension methods]: /language/extension-methods
+[`on` type]: /language/extension-methods#implementing-extension-methods
+
 ### Only private fields can be promoted {#private}
 
 **The cause:**
 You're trying to promote a field, but the field is not private.
 
-It’s possible for other libraries in your program
+It's possible for other libraries in your program
 to override public fields with a getter. Because
 [getters might not return a stable value](#not-field),
 and the compiler can't know what other libraries are doing,
@@ -221,12 +232,12 @@ non-private fields cannot be promoted.
 
 {:.bad}
 ```dart
-class Exampke {
+class Example {
   final int? i;
   Example(this.i);
 }
 
-test(Example x) {
+void test(Example x) {
   if (x.i != null) {
     print(x.i + 1); // ERROR
   }
@@ -236,7 +247,7 @@ test(Example x) {
 **Message:**
 
 ```nocode
-'i' refers to a public field so it couldn’t be promoted.
+'i' refers to a public field so it couldn't be promoted.
 ```
 
 **Solution:**
@@ -252,7 +263,7 @@ class Example {
   Example(this._i);
 }
 
-test(Example x) {
+void test(Example x) {
   if (x._i != null) {
     print(x._i + 1); // OK
   }
@@ -266,7 +277,7 @@ You're trying to promote a field, but the field is not final.
 
 To the compiler, non-final fields could, in principle,
 be modified any time between the time
-they’re tested and the time they’re used.
+they're tested and the time they're used.
 So it's not safe for the compiler to promote a non-final nullable type
 to a non-nullable type.
 
@@ -278,7 +289,7 @@ class A {
   int? _mutablePrivateField;
   A(this._mutablePrivateField);
 
-  f() {
+  void f() {
     if (_mutablePrivateField != null) {
       int i = _mutablePrivateField; // ERROR
     }
@@ -289,7 +300,7 @@ class A {
 **Message:**
 
 ```nocode
-'_mutablePrivateField' refers to a non-final field so it couldn’t be promoted.
+'_mutablePrivateField' refers to a non-final field so it couldn't be promoted.
 ```
 
 **Solution:**
@@ -303,7 +314,7 @@ class A {
   [!final int? _immutablePrivateField;!]
   A(this._immutablePrivateField);
 
-  f() {
+  void f() {
     if (_immutablePrivateField != null) {
       int i = _immutablePrivateField; // OK
     }
@@ -329,7 +340,7 @@ abstract class B {
   int? get _i => Random().nextBool() ? 123 : null;
 }
 
-testB(B b) {
+void testB(B b) {
   if (b._i != null) {
     print(b._i.isEven); // ERROR
   }
@@ -339,7 +350,7 @@ testB(B b) {
 **Message:**
 
 ```nocode
-'_i' refers to a getter so it couldn’t be promoted.
+'_i' refers to a getter so it couldn't be promoted.
 ```
 
 **Solution:**
@@ -355,7 +366,7 @@ abstract class B {
   int? get _i => Random().nextBool() ? 123 : null;
 }
 
-testB(B b) {
+void testB(B b) {
   [!final i = b._i;!]
   if (i != null) {
     print(i.isEven); // OK
@@ -364,14 +375,16 @@ testB(B b) {
 ```
 
 {{site.alert.note}}
-There is a [known bug] (as of 3.2) where flow analysis doesn't consider `abstract`
-getters stable enough to allow type promotion (though they technically are).
-This will be fixed in a future release.
-In the meantime, replacing an abstract getter with an [abstract field][]
-will allow you to workaround this bug.
+  There is a [known limitation][] (as of Dart 3.2) where flow analysis
+  doesn't consider `abstract` getters stable enough to
+  allow type promotion (though they technically are).
+  This will likely be fixed in Dart 3.3.
+  In the meantime, replacing an abstract getter with an [abstract field][]
+  will allow you to work around this bug.
 {{site.alert.end}}
 
-[known bug]: https://github.com/dart-lang/language/issues/3328#issuecomment-1792511446
+[known limitation]: https://github.com/dart-lang/language/issues/3328#issuecomment-1792511446
+[abstract field]: /null-safety/understanding-null-safety#abstract-fields
 
 ### External fields can't be promoted {#external}
 
@@ -380,8 +393,8 @@ You're trying to promote a field, but the field is marked `external`.
 
 External fields don't promote because they are essentially external getters;
 their implementation is code from outside of Dart,
-so there’s no guarantee for the compiler that an external field 
-will return the same value each time it’s called.
+so there's no guarantee for the compiler that an external field 
+will return the same value each time it's called.
 
 **Example:**
 
@@ -390,7 +403,7 @@ will return the same value each time it’s called.
 class E {
   external final int? _externalField;
 
-  f() {
+  void f() {
     if (_externalField != null) {
       print(_externalField.isEven); // ERROR
     }
@@ -401,7 +414,7 @@ class E {
 **Message:**
 
 ```nocode
-'_externalField' refers to an external field so it couldn’t be promoted.
+'_externalField' refers to an external field so it couldn't be promoted.
 ```
 
 **Solution:**
@@ -414,8 +427,8 @@ Assign the external field's value to a local variable:
 class E {
   external final int? _externalField;
 
-  f() {
-    [!final i = this._externalField;!]
+  void f() {
+    [!final i = _externalField;!]
     if (i != null) {
       print(i.isEven); // OK
     }
@@ -446,7 +459,7 @@ class Override implements D {
   int? get _overridden => Random().nextBool() ? 1 : null;
 }
 
-testD(D d) {
+void testD(D d) {
   if (d._overridden != null) {
     print(d._overridden.isEven); // ERROR
   }
@@ -456,7 +469,7 @@ testD(D d) {
 **Message:**
 
 ```nocode
-'_overriden' couldn’t be promoted because there is a conflicting getter in class 'Override'
+'_overriden' couldn't be promoted because there is a conflicting getter in class 'Override'
 ```
 
 **Solution**:
@@ -481,7 +494,7 @@ class Override implements D {
   int? get _overridden => Random().nextBool() ? 1 : null;
 }
 // ···
-testD(D d) {
+void testD(D d) {
   [!final i = d._overridden;!]
   if (i != null) {
     print(i.isEven); // OK
@@ -491,9 +504,9 @@ testD(D d) {
 
 #### Note about unrelated classes
 
-Note that in the above example it’s clear
+Note that in the above example it's clear
 why it's unsafe to promote the field `_overridden`:
-because there’s an override relationship between the field and the getter. 
+because there's an override relationship between the field and the getter. 
 However, a conflicting getter will prevent field promotion
 even if the classes are unrelated. For example:
 
@@ -510,7 +523,7 @@ class Unrelated {
   int? get _i => Random().nextBool() ? 1 : null;
 }
 
-f(Example x) {
+void f(Example x) {
   if (x._i != null) {
     int i = x._i; // ERROR
   }
@@ -526,7 +539,7 @@ get dispatched to `Unrelated._i`. For example:
 ```dart
 class Surprise extends Unrelated implements Example {}
 
-main() {
+void main() {
   f(Surprise());
 }
 ```
@@ -548,7 +561,7 @@ class Unrelated {
   int? [!get _j!] => Random().nextBool() ? 1 : null;
 }
 // ···
-f(Example x) {
+void f(Example x) {
   if (x._i != null) {
     int i = x._i; // OK
   }
@@ -576,7 +589,7 @@ class Override2 implements D {
   int? _overridden;
 }
 
-testD(D d) {
+void testD(D d) {
   if (d._overridden != null) {
     print(d._overridden.isEven); // ERROR
   }
@@ -589,7 +602,7 @@ instance of `Override`, so promotion would not be sound.
 **Message:**
 
 ```nocode
-'_overridden' couldn’t be promoted because there is a conflicting non-promotable field in class 'Override2'.
+'_overridden' couldn't be promoted because there is a conflicting non-promotable field in class 'Override2'.
 ```
 
 **Solution:**
@@ -610,7 +623,7 @@ class Override2 implements D {
   int? _overridden;
 }
 // ···
-testD(D d) {
+void testD(D d) {
   [!final i = d._overridden;!]
   if (i != null) {
     print(i.isEven); // OK
@@ -618,8 +631,8 @@ testD(D d) {
 }
 ```
 
-If the fields are unrelated, then simply rename one of the fields so they don't
-conflict.
+If the fields are unrelated, then rename one of the fields so
+they don't conflict.
 Read the [Note about unrelated classes](#note-about-unrelated-classes). 
 
 
@@ -631,7 +644,7 @@ but another class in the same library contains an
 [implicit `noSuchMethod` forwarder][nosuchmethod]
 with the same name as the field.
 
-This is unsound because there’s no guarantee that `noSuchMethod`
+This is unsound because there's no guarantee that `noSuchMethod`
 will return a stable value from one invocation to the next.
 
 **Example:**
@@ -647,7 +660,7 @@ class Example {
 
 class MockExample extends Mock implements Example {}
 
-f(Example x) {
+void f(Example x) {
   if (x._i != null) {
     int i = x._i; // ERROR
   }
@@ -656,13 +669,13 @@ f(Example x) {
 
 In this example, `_i` can't be promoted because it could resolve to the unsound
 implicit `noSuchMethod` forwarder (also named `_i`) that the compiler generates
-inside `MockExample`. 
+inside `MockExample`.
 
 The compiler creates this implicit implementation of `_i` because
 `MockExample` promises to support a getter for `_i` when it implements
 `Example` in its declaration, but doesn't fulfill that promise. 
-So, the undefined getter implementation is handled by [`Mock`'s `noSuchMethod`
-definition](https://pub.dev/documentation/mockito/latest/mockito/Mock/noSuchMethod.html),
+So, the undefined getter implementation is handled by
+[`Mock`'s `noSuchMethod` definition][],
 which creates an implicit `noSuchMethod` forwarder of the same name.
 
 The failure can also occur between fields in
@@ -671,7 +684,7 @@ The failure can also occur between fields in
 **Message:**
 
 ```nocode
-'_i' couldn’t be promoted because there is a conflicting noSuchMethod forwarder in class 'MockExample'.
+'_i' couldn't be promoted because there is a conflicting noSuchMethod forwarder in class 'MockExample'.
 ```
 
 **Solution:**
@@ -694,7 +707,7 @@ class MockExample extends Mock implements Example {
   [!late final int? _i;!]
 }
 
-f(Example x) {
+void f(Example x) {
   if (x._i != null) {
     int i = x._i; // OK
   }
@@ -706,20 +719,22 @@ it's not necessary to declare the getter `late` to solve this type promotion
 failure in scenarios not involving mocks.
 
 {{site.alert.note}}
-The example above uses [mocks](https://pub.dev/packages/mockito) simply because
+The example above uses [mocks]({{site.pub-pkg}}/mockito) simply because
 `Mock` already contains a `noSuchMethod` definition,
 so we don't have to define an arbitrary one
 and can keep the example code short. 
 
-We don’t expect problems like this to arise very often in practice with mocks,
+We don't expect problems like this to arise very often in practice with mocks,
 because usually mocks are declared
 in a different library than the class they are mocking.
 When the classes in question are declared in different libraries,
-private names aren’t forwarded to `noSuchMethod`
+private names aren't forwarded to `noSuchMethod`
 (because that would violate privacy expectations),
-so it’s still safe to promote the field.
+so it's still safe to promote the field.
 {{site.alert.end}}
 
+[nosuchmethod]: /language/extend#nosuchmethod
+[`Mock`'s `noSuchMethod` definition]: {{site.pub-api}}/mockito/latest/mockito/Mock/noSuchMethod.html
 
 ### Possibly written after promotion {#write}
 
@@ -970,8 +985,6 @@ implements both `Comparable` and `Pattern`.
 One possible solution is to create a new local variable so that
 the original variable is promoted to `Comparable`, and
 the new variable is promoted to `Pattern`:
-
-<!-- code-excerpt "non_promotion/lib/non_promotion.dart (closure-new-var)" replace="/var o2.*/[!$&!]/g;/o2\./[!o2!]./g"?>-->
 
 <?code-excerpt "non_promotion/lib/non_promotion.dart (subtype-variable)" replace="/Object o2.*/[!$&!]/g;/(o2)(\.| is)/[!$1!]$2/g"?>
 ```dart
@@ -1237,14 +1250,4 @@ void f(int? i, int? j) {
 }
 ```
 
-[Type promotion]: /null-safety/understanding-null-safety#type-promotion-on-null-checks
-[nullable type]: /null-safety/understanding-null-safety#non-nullable-and-nullable-types
-[Understanding null safety]: /null-safety/understanding-null-safety
 [language version]: /guides/language/evolution#language-versioning
-[`pubspec.yaml`]: /tools/pub/pubspec
-[upgrade]: /get-dart
-[extension methods]: /language/extension-methods
-[`on` type]: /language/extension-methods#implementing-extension-methods
-[abstract]: /language/methods#abstract-methods
-[abstract field]: /null-safety/understanding-null-safety#abstract-fields
-[nosuchmethod]: /language/extend#nosuchmethod

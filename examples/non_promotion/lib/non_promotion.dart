@@ -263,7 +263,7 @@ class Example {
 }
 // #enddocregion unrelated, mock
 
-test(Example x) {
+void test(Example x) {
   if (x._i != null) {
     print(x._i + 1); // OK
   }
@@ -275,7 +275,7 @@ class A {
   final int? _immutablePrivateField;
   A(this._immutablePrivateField);
 
-  f() {
+  void f() {
     if (_immutablePrivateField != null) {
       int i = _immutablePrivateField; // OK
     }
@@ -288,7 +288,7 @@ abstract class B {
   int? get _i => Random().nextBool() ? 123 : null;
 }
 
-testB(B b) {
+void testB(B b) {
   final i = b._i;
   if (i != null) {
     print(i.isEven); // OK
@@ -300,8 +300,8 @@ testB(B b) {
 class E {
   external final int? _externalField;
 
-  f() {
-    final i = this._externalField;
+  void f() {
+    final i = _externalField;
     if (i != null) {
       print(i.isEven); // OK
     }
@@ -330,7 +330,7 @@ class Override2 implements D {
 // #enddocregion field-name
 
 // #docregion getter-name, field-name
-testD(D d) {
+void testD(D d) {
   final i = d._overridden;
   if (i != null) {
     print(i.isEven); // OK
@@ -351,7 +351,7 @@ class MockExample extends Mock implements Example {
 }
 
 // #docregion unrelated
-f(Example x) {
+void f(Example x) {
   if (x._i != null) {
     int i = x._i; // OK
   }
